@@ -3,10 +3,10 @@ import sys, os, mmap, time
 
 mapping = [0,1,2,3,4,5,6,7,8]
 
-# magic DB version number as of this writing (8/08)
-MAGIC = 1413695500
+# magic DB version number as of this writing (May 2011)
+MAGIC = 0x5443480e
 
-# tags are encoded in latin-1
+# tags are encoded in UTF-8
 # text tags like artist are someitmes padded out with XXXXes, presumably 
 #   for easy expansion (lengths padded to: 4+8*n)
 # number tags are 0 for not given or undefined
@@ -33,9 +33,10 @@ TAGS = [
     'playtime', 
     'lastplayed', 
     'commitid', # how is this calculated?
-    'mtime'
+    'mtime',
+    'lastoffset'
     ]
-TAG_COUNT = 20
+TAG_COUNT = 21
 
 FLAGS = {
         1: "DELETED",
@@ -173,10 +174,10 @@ def parse_tagfile(location):
     offset = 12
     for n in range(tf.entry_count):
         e = TagfileEntry()
-        e.tag_length = to_int(m[offset:offset+2])
-        e.idx_id = to_int(m[offset+2: offset+4])
-        e.data = m[offset+4:offset+4+e.tag_length]
-        offset += e.tag_length + 4
+        e.tag_length = to_int(m[offset:offset+4])
+        e.idx_id = to_int(m[offset+4: offset+8])
+        e.data = m[offset+8:offset+8+e.tag_length]
+        offset += e.tag_length + 8
         tf.entries.append(e)
 
     return tf
