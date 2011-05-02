@@ -286,5 +286,5 @@ if __name__ == '__main__':
 
     # Print all filenames for tracks that have been played partially
     for e in db:
-        if e['playcount'] > 0 and e['lastoffset'] != 0:
+        if e['playcount'] > 0 and e['lastoffset'] != 0 and not FLAGS[1] in e.flags:
             print e['filename']
