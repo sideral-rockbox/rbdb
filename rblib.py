@@ -4,7 +4,7 @@ import sys, os, mmap, time
 mapping = [0,1,2,3,4,5,6,7,8]
 
 # magic DB version number
-MAGIC = 1413695500
+MAGIC = 0x5443480e
 
 
 TAGS = [
@@ -28,9 +28,10 @@ TAGS = [
     'playtime', 
     'lastplayed', 
     'commitid', # how is this calculated?
-    'mtime'
+    'mtime',
+    'lastoffset'
     ]
-TAG_COUNT = 20
+TAG_COUNT = 21
 
 FLAGS = {
         1: "DELETED",
@@ -118,11 +119,11 @@ class Database(list):
         for n in range(entry_count):
             e = Entry()
             e.index = n
-            offset = 24+n*84
+            offset = 24+n*(TAG_COUNT+1)*4
             for n2 in range(9):
                 e[n2] = to_int(idx[offset:offset+4])
                 offset += 4
-            for n2 in range(9, 20):
+            for n2 in range(9, TAG_COUNT):
                 e[TAGS[n2]] = to_int(idx[offset:offset+4])
                 offset += 4
             flags = to_int(idx[offset:offset+4])
@@ -136,8 +137,8 @@ class Database(list):
             for n in range(9):
                 tname = TAGS[n]
                 offset = e[n]
-                l = to_int(mmaps[n][offset:offset+2])
-                e[tname] = mmaps[n][offset+4:offset+4+l].split(chr(0))[0]
+                l = to_int(mmaps[n][offset:offset+4])
+                e[tname] = mmaps[n][offset+8:offset+8+l].split(chr(0))[0]
                 del e[n]
 
     # WARNING: if this gets interrupted the DB will be left in an unusuable state
@@ -277,3 +278,13 @@ class Entry(dict):
         return ret
 
 
+if __name__ == '__main__':
+    db = Database(sys.argv[1])
+    db.parse()
+
+#    print db
+
+    # Print all filenames for tracks that have been played partially
+    for e in db:
+        if e['playcount'] > 0 and e['lastoffset'] != 0:
+            print e['filename']
